@@ -11,6 +11,8 @@ import UIKit
 class BusinessesViewController: UIViewController, UITableViewDataSource, UITableViewDelegate, FiltersViewControllerDelegate {
     
     var businesses: [Business]!
+    var filtered:[Business] = []
+    var searchActive = false
     
     var switchStates : [Int:[Int:Bool]]! = [
         0:[0:false],
@@ -20,15 +22,25 @@ class BusinessesViewController: UIViewController, UITableViewDataSource, UITable
     ]
     @IBOutlet weak var tableView: UITableView!
     
+    var searchBar: UISearchBar!
+    //var searchSettings = GithubRepoSearchSettings()
     
     override func viewDidLoad() {
         super.viewDidLoad()
+        // Initialize the UISearchBar
+        searchBar = UISearchBar()
+        searchBar.delegate = self
+        
+        // Add SearchBar to the NavigationBar
+        searchBar.sizeToFit()
+        navigationItem.titleView = searchBar
+        
         tableView.dataSource = self
         tableView.delegate = self
         tableView.rowHeight = UITableViewAutomaticDimension
         tableView.estimatedRowHeight = 120
         
-        Business.searchWithTerm(term: "Thai", completion: { (businesses: [Business]?, error: Error?) -> Void in
+        Business.searchWithTerm(term: "Restaurants", completion: { (businesses: [Business]?, error: Error?) -> Void in
             
             self.businesses = businesses
             self.tableView.reloadData()
@@ -56,6 +68,7 @@ class BusinessesViewController: UIViewController, UITableViewDataSource, UITable
     }
     
     func tableView(_ tableView: UITableView, numberOfRowsInSection section: Int) -> Int {
+        
         if businesses != nil {
             return businesses.count
         } else {
@@ -64,6 +77,7 @@ class BusinessesViewController: UIViewController, UITableViewDataSource, UITable
     }
     
     func tableView(_ tableView: UITableView, cellForRowAt indexPath: IndexPath) -> UITableViewCell {
+        
         let cell = tableView.dequeueReusableCell(withIdentifier: "BusinessCell", for: indexPath) as! BusinessCell
         
         cell.business = businesses[indexPath.row]
@@ -110,4 +124,63 @@ class BusinessesViewController: UIViewController, UITableViewDataSource, UITable
 
     
     
+}
+
+// SearchBar methods
+extension BusinessesViewController: UISearchBarDelegate {
+    
+    func searchBarShouldBeginEditing(_ searchBar: UISearchBar) -> Bool {
+        searchBar.setShowsCancelButton(true, animated: true)
+        return true
+    }
+    
+    func searchBarShouldEndEditing(_ searchBar: UISearchBar) -> Bool {
+        searchBar.setShowsCancelButton(false, animated: true)
+        return true
+    }
+    
+    func searchBarCancelButtonClicked(_ searchBar: UISearchBar) {
+        searchBar.text = ""
+        searchBar.resignFirstResponder()
+        searchActive = false
+    }
+    
+    func searchBarSearchButtonClicked(_ searchBar: UISearchBar) {
+        print("hey")
+        print(searchBar.text)
+        Business.searchWithTerm(term: searchBar.text!, completion: { (businesses: [Business]?, error: Error?) -> Void in
+            if(businesses?.count != 0){
+                self.businesses = businesses
+            }
+            
+            self.tableView.reloadData()
+            if let businesses = businesses {
+                for business in businesses {
+                    print(business.name!)
+                    print(business.address!)
+                }
+            }
+            
+            }
+        )
+ 
+    }
+    /*
+    func searchBar(_ searchBar: UISearchBar, textDidChange searchText: String) {
+        
+        filtered = (self.movies?.filter() { (movie: NSDictionary) -> Bool in
+            let title: NSString = movie["original_title"]! as! NSString
+            let range = title.range(of: searchText, options: NSString.CompareOptions.caseInsensitive)
+            return range.location != NSNotFound
+            })! as [NSDictionary]
+        
+        
+        if(filtered.count == 0){
+            searchActive = false;
+        } else {
+            searchActive = true;
+        }
+        self.tableView.reloadData()
+    }
+ */
 }
